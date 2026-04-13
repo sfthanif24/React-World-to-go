@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Explore the World favicon">
+  <defs>
+    <linearGradient id="bg" x1="10" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0c2647" />
+      <stop offset="1" stop-color="#15365f" />
+    </linearGradient>
+    <linearGradient id="stroke" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4ba2ff" />
+      <stop offset="1" stop-color="#62e7ff" />
+    </linearGradient>
+  </defs>
+
+  <rect x="4" y="4" width="56" height="56" rx="16" fill="url(#bg)" />
+  <rect x="4.75" y="4.75" width="54.5" height="54.5" rx="15.25" fill="none" stroke="url(#stroke)" stroke-opacity="0.45" stroke-width="1.5" />
+
+  <circle cx="32" cy="32" r="15" fill="none" stroke="url(#stroke)" stroke-width="3.2" stroke-linecap="round" />
+  <path d="M17 32h30" fill="none" stroke="url(#stroke)" stroke-width="3" stroke-linecap="round" />
+  <path d="M32 17v30" fill="none" stroke="url(#stroke)" stroke-width="3" stroke-linecap="round" />
+  <path d="M24 32c0-9 2.4-15 8-15s8 6 8 15-2.4 15-8 15-8-6-8-15z" fill="none" stroke="url(#stroke)" stroke-width="2.2" />
+</svg>

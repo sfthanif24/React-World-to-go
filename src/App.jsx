@@ -1,9 +1,10 @@
-import React, { Suspense, lazy } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import React, { Suspense, lazy, useEffect } from "react";
+import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "./context/ThemeContext";
 import Layout from "./components/Layout/Layout";
 import HomePage from "./pages/HomePage";
+import ProfilePage from "./pages/ProfilePage";
 import { ChatBot } from "./components/ChatBot/ChatBot";
 
 import "./App.css";
@@ -12,6 +13,26 @@ import "./App.css";
 const CountriesPage = lazy(() => import("./pages/CountriesPage"));
 
 const App = () => {
+  useEffect(() => {
+    const handlePointerDown = (event) => {
+      const wave = document.createElement("span");
+      wave.className = "click-wave";
+      wave.style.left = `${event.clientX}px`;
+      wave.style.top = `${event.clientY}px`;
+
+      document.body.appendChild(wave);
+      wave.addEventListener("animationend", () => wave.remove(), {
+        once: true,
+      });
+    };
+
+    window.addEventListener("pointerdown", handlePointerDown, {
+      passive: true,
+    });
+
+    return () => window.removeEventListener("pointerdown", handlePointerDown);
+  }, []);
+
   return (
     <ThemeProvider>
       <BrowserRouter>
@@ -28,8 +49,10 @@ const App = () => {
         >
           <Routes>
             <Route path="/" element={<Layout />}>
-              <Route index element={<HomePage />} />
+              <Route index element={<Navigate to="/home" replace />} />
+              <Route path="home" element={<HomePage />} />
               <Route path="countries" element={<CountriesPage />} />
+              <Route path="profile" element={<ProfilePage />} />
             </Route>
             <Route path="/chat" element={<Layout />}>
               <Route index element={<ChatBot forceFullPage={true} />} />

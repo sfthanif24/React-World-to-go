@@ -20,13 +20,13 @@ import {
   Paperclip,
   ArrowLeft,
 } from "lucide-react";
-import { useTheme } from "../../context/ThemeContext";
 import "./ChatBot.css";
+
+const Motion = motion;
 
 export const ChatBot = ({ forceFullPage = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { theme } = useTheme();
 
   const isChatPage = location.pathname === "/chat" || forceFullPage;
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -40,6 +40,7 @@ export const ChatBot = ({ forceFullPage = false }) => {
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameId, setRenameId] = useState(null);
   const [renameValue, setRenameValue] = useState("");
+  const [countryKnowledge, setCountryKnowledge] = useState([]);
   const scrollRef = useRef(null);
   const renameInputRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -86,7 +87,7 @@ export const ChatBot = ({ forceFullPage = false }) => {
           } else {
             createNewChat();
           }
-        } catch (e) {
+        } catch {
           createNewChat();
         }
       } else {
@@ -96,6 +97,17 @@ export const ChatBot = ({ forceFullPage = false }) => {
     }
 
     return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  useEffect(() => {
+    fetch("https://openapi.programming-hero.com/api/all")
+      .then((res) => res.json())
+      .then((data) => {
+        setCountryKnowledge(data?.countries || []);
+      })
+      .catch(() => {
+        setCountryKnowledge([]);
+      });
   }, []);
 
   useEffect(() => {
@@ -139,6 +151,263 @@ export const ChatBot = ({ forceFullPage = false }) => {
     );
   };
 
+  const formatNumber = (value) => {
+    if (typeof value !== "number") return "N/A";
+    return value.toLocaleString();
+  };
+
+  const normalize = (value = "") => value.toLowerCase().trim();
+
+  const extractText = (value) => {
+    if (value == null) return [];
+    if (typeof value === "string" || typeof value === "number") {
+      const v = String(value).trim();
+      return v ? [v] : [];
+    }
+
+    if (Array.isArray(value)) {
+      return value.flatMap((item) => extractText(item));
+    }
+
+    if (typeof value === "object") {
+      if (typeof value.name === "string") return extractText(value.name);
+      if (typeof value.common === "string") return extractText(value.common);
+      if (typeof value.official === "string") {
+        return extractText(value.official);
+      }
+      if (typeof value.symbol === "string") return extractText(value.symbol);
+
+      return Object.values(value).flatMap((item) => extractText(item));
+    }
+
+    return [];
+  };
+
+  const toReadableList = (value) => {
+    const items = Array.from(new Set(extractText(value))).filter(Boolean);
+    return items.length ? items.join(", ") : "N/A";
+  };
+
+  const toFlagEmoji = (country) => {
+    const code = (country?.cca2 || "").toUpperCase();
+    if (!/^[A-Z]{2}$/.test(code)) return "";
+    const base = 127397;
+    return code
+      .split("")
+      .map((char) => String.fromCodePoint(base + char.charCodeAt(0)))
+      .join("");
+  };
+
+  const findCountryFromQuestion = (question) => {
+    const q = normalize(question);
+    if (!q || !countryKnowledge.length) return null;
+
+    return (
+      countryKnowledge.find((country) => {
+        const common = normalize(country?.name?.common);
+        const official = normalize(country?.name?.official);
+        return (
+          (common && q.includes(common)) || (official && q.includes(official))
+        );
+      }) || null
+    );
+  };
+
+  const findCountryByCapitalMention = (question) => {
+    const q = normalize(question);
+    if (!q || !countryKnowledge.length) return null;
+
+    return (
+      countryKnowledge.find((country) => {
+        const capitals = extractText(country?.capital);
+        return capitals.some((capital) => {
+          const normalizedCapital = normalize(capital);
+          return normalizedCapital && q.includes(normalizedCapital);
+        });
+      }) || null
+    );
+  };
+
+  const buildCountrySummary = (country) => {
+    if (!country) return null;
+
+    const name = country?.name?.common || "This country";
+    const capital = country?.capital?.capital || country?.capital?.[0] || "N/A";
+    const region = country?.region?.region || country?.region || "N/A";
+    const subregion =
+      country?.subregion?.subregion || country?.subregion || "N/A";
+    const population = formatNumber(
+      country?.population?.population || country?.population,
+    );
+    const area = `${formatNumber(country?.area?.area || country?.area)} km2`;
+    const languages = toReadableList(country?.languages);
+    const currencies = toReadableList(country?.currencies);
+    const flagEmoji = toFlagEmoji(country);
+    const flagImage = country?.flags?.flags?.png || country?.flags?.png || "";
+
+    return {
+      name,
+      capital,
+      region,
+      subregion,
+      population,
+      area,
+      languages,
+      currencies,
+      flagEmoji,
+      flagImage,
+      rawText: `${name}: capital ${capital}, region ${region}, subregion ${subregion}, population ${population}, area ${area}, languages ${languages}, currencies ${currencies}.`,
+    };
+  };
+
+  const resolveCountryQuestion = (question) => {
+    const country =
+      findCountryFromQuestion(question) ||
+      findCountryByCapitalMention(question);
+    if (!country) return null;
+
+    const q = normalize(question);
+    const summary = buildCountrySummary(country);
+
+    if (!summary) return null;
+
+    if (q.includes("capital")) {
+      return `The capital of ${summary.name} is ${summary.capital}.`;
+    }
+    if (q.includes("population")) {
+      return `${summary.name} has a population of ${summary.population}.`;
+    }
+    if (q.includes("area") || q.includes("size")) {
+      return `${summary.name} covers an area of ${summary.area}.`;
+    }
+    if (q.includes("region") || q.includes("continent")) {
+      return `${summary.name} is in ${summary.region} (${summary.subregion}).`;
+    }
+    if (q.includes("language")) {
+      return `Languages spoken in ${summary.name}: ${summary.languages}.`;
+    }
+    if (q.includes("currency")) {
+      return `Currencies used in ${summary.name}: ${summary.currencies}.`;
+    }
+    if (q.includes("flag")) {
+      if (summary.flagEmoji) {
+        return `${summary.name} flag: ${summary.flagEmoji}`;
+      }
+      if (summary.flagImage) {
+        return `You can view the ${summary.name} flag here: ${summary.flagImage}`;
+      }
+      return `I could not find a flag source for ${summary.name}.`;
+    }
+    if (
+      q.includes("cca3") ||
+      q.includes("country code") ||
+      q.includes("code")
+    ) {
+      return `The CCA3 code for ${summary.name} is ${country?.cca3 || "N/A"}.`;
+    }
+
+    return `${summary.rawText}`;
+  };
+
+  const resolveGeneralFallback = (question) => {
+    const q = normalize(question);
+
+    if (!q) {
+      return "Ask me anything. I can help with countries, coding, travel, study tips, and general guidance.";
+    }
+
+    if (q.includes("cca3")) {
+      return "CCA3 is a three-letter country code standard (ISO 3166-1 alpha-3), like BGD for Bangladesh or JPN for Japan.";
+    }
+
+    const mathExpr = question.replace(/[^0-9+\-*/().%\s]/g, "").trim();
+    if (
+      mathExpr &&
+      /^[0-9+\-*/().%\s]+$/.test(mathExpr) &&
+      /[+\-*/%]/.test(mathExpr)
+    ) {
+      try {
+        const result = Function(`"use strict"; return (${mathExpr})`)();
+        if (Number.isFinite(result)) {
+          return `The result is ${result}.`;
+        }
+      } catch {
+        // Ignore parse errors and continue with other fallbacks.
+      }
+    }
+
+    if (q.includes("time") || q.includes("date") || q.includes("today")) {
+      const now = new Date();
+      return `Current local date/time: ${now.toLocaleString()}.`;
+    }
+
+    if (q.includes("hello") || q.includes("hi") || q.includes("hey")) {
+      return "Hello! Ask me any question and I will do my best to help.";
+    }
+
+    if (q.includes("how are you")) {
+      return "I am doing great. Tell me what you want to know and I will help.";
+    }
+
+    if (
+      q.includes("largest country") ||
+      q.includes("biggest country in the world")
+    ) {
+      return "The largest country in the world by area is Russia.";
+    }
+
+    return "I can answer this. For richer and more detailed responses on any topic, keep the AI API key configured and ask your question in one line with context.";
+  };
+
+  const askDeepSeek = async (question, countryContext = "") => {
+    const apiKey = import.meta.env.VITE_DEEPSEEK_API_KEY;
+    if (!apiKey) return null;
+
+    let timeout;
+
+    try {
+      const controller = new AbortController();
+      timeout = setTimeout(() => controller.abort(), 7000);
+
+      const response = await fetch(
+        "https://api.deepseek.com/v1/chat/completions",
+        {
+          method: "POST",
+          signal: controller.signal,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: "deepseek-chat",
+            messages: [
+              {
+                role: "system",
+                content:
+                  "You are World Explorer AI, a helpful general assistant. Answer any type of question clearly and concisely. When country context is provided, prioritize factual country data.",
+              },
+              {
+                role: "user",
+                content: countryContext
+                  ? `Country context: ${countryContext}\n\nUser question: ${question}`
+                  : question,
+              },
+            ],
+            temperature: 0.3,
+          }),
+        },
+      );
+
+      if (!response.ok) return null;
+      const data = await response.json();
+      return data?.choices?.[0]?.message?.content?.trim() || null;
+    } catch {
+      return null;
+    } finally {
+      if (timeout) clearTimeout(timeout);
+    }
+  };
+
   const handleSend = async () => {
     if (!inputValue.trim()) return;
 
@@ -164,64 +433,48 @@ export const ChatBot = ({ forceFullPage = false }) => {
       );
     }
 
-    setTimeout(() => {
+    try {
       const input = newUserMsg.content.toLowerCase().trim();
-      let response = "";
+      const countryAnswer = resolveCountryQuestion(newUserMsg.content);
+      const llmAnswer = await askDeepSeek(
+        newUserMsg.content,
+        countryAnswer || "",
+      );
 
-      if (input === "hello" || input === "hi" || input === "hey") {
+      let response =
+        llmAnswer ||
+        countryAnswer ||
+        resolveGeneralFallback(newUserMsg.content);
+
+      if (input.includes("your name") && !llmAnswer) {
         response =
-          "Hello! I'm your World Explorer AI Assistant. I can help you learn about countries worldwide!";
-      } else if (input.includes("your name")) {
-        response =
-          "I'm the World Explorer AI Assistant, your dedicated travel companion.";
-      } else if (input.includes("countries")) {
-        response =
-          "I can help you explore countries! Visit our countries page to browse by region, search for specific countries, and learn fascinating facts.";
-      } else if (input.includes("population") || input.includes("area")) {
-        response =
-          "I can provide information about countries' populations, areas, capitals, and more! Try visiting our countries page to explore.";
-      } else if (input.includes("search")) {
-        response =
-          "You can search for countries in the Countries page using the search bar. Type a country name to filter results!";
-      } else if (input.includes("help")) {
-        response =
-          "I can help you explore countries, find information about regions, and answer questions about world geography. What would you like to know?";
-      } else if (input.includes("map")) {
-        response =
-          "Browse all countries in our interactive Countries page. You can sort by region, search by name, and view detailed information!";
-      } else if (input.includes("capital")) {
-        response =
-          "Each country has a capital city! Visit the Countries page to find capital cities and other details about any country you're interested in.";
-      } else if (input.includes("region") || input.includes("continent")) {
-        response =
-          "Countries are organized by region. Visit the Countries page to explore countries by their geographic location!";
-      } else if (input.includes("language")) {
-        response =
-          "Different countries speak different languages. In the Countries page, you can find detailed information about languages spoken worldwide.";
-      } else if (input.includes("currency")) {
-        response =
-          "Each country uses a different currency. Check the Countries page for detailed information about currencies used in different nations.";
-      } else if (input.includes("about")) {
-        response =
-          "World to Go is your premium country explorer. Discover nations, learn facts, and explore the world from your screen!";
-      } else {
-        const botResponses = [
-          "That's interesting! Let me know if you'd like to explore specific countries or regions.",
-          "I understand. Feel free to ask me anything about countries and world geography!",
-          "Great question! Our Countries page has comprehensive information about nations worldwide.",
-        ];
-        response =
-          botResponses[Math.floor(Math.random() * botResponses.length)];
+          "I'm World Explorer AI, your assistant for countries and general questions.";
       }
+
+      if (input.includes("about") && input.includes("website") && !llmAnswer) {
+        response =
+          "World to Go is a premium country explorer app. You can browse countries, track visited/planned places, and chat with AI for both country and general questions.";
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 450));
 
       const botMsg = {
         id: Date.now() + 1,
         type: "bot",
-        content: response + " How else can I help you?",
+        content: response,
       };
       updateCurrentSession([...updatedMessages, botMsg]);
+    } catch {
+      const fallbackMsg = {
+        id: Date.now() + 1,
+        type: "bot",
+        content:
+          "I had a temporary connection issue. Please try again with your question.",
+      };
+      updateCurrentSession([...updatedMessages, fallbackMsg]);
+    } finally {
       setIsTyping(false);
-    }, 1200);
+    }
   };
 
   const deleteChat = (id) => {
@@ -323,9 +576,13 @@ export const ChatBot = ({ forceFullPage = false }) => {
       {/* Mobile Overlay */}
       <div
         className={`chatbot-overlay ${
-          isSidebarOpen ? "chatbot-overlay--open" : "chatbot-overlay--closed"
+          isMobile && isSidebarOpen
+            ? "chatbot-overlay--open"
+            : "chatbot-overlay--closed"
         }`}
-        onClick={() => setIsSidebarOpen(false)}
+        onClick={() => {
+          if (isMobile) setIsSidebarOpen(false);
+        }}
       />
 
       {/* Sidebar */}
@@ -569,8 +826,8 @@ export const ChatBot = ({ forceFullPage = false }) => {
                     Welcome to World Explorer AI
                   </h2>
                   <p className="chatbot-empty-text">
-                    Your assistant for exploring countries worldwide. Ask me
-                    anything!
+                    Ask me anything. I can help with countries plus general
+                    questions on many topics.
                   </p>
                 </div>
               ) : (
@@ -650,7 +907,7 @@ export const ChatBot = ({ forceFullPage = false }) => {
                       handleSend();
                     }
                   }}
-                  placeholder="Ask about countries, regions, or travel..."
+                  placeholder="Ask any question... countries, coding, study, travel, and more"
                   className="chatbot-textarea"
                 />
                 <button
@@ -693,7 +950,7 @@ export const ChatBot = ({ forceFullPage = false }) => {
         <div className="absolute bottom-[-5px] right-6 w-2.5 h-2.5 bg-foreground rotate-45" />
       </div>
 
-      <motion.button
+      <Motion.button
         whileHover={{ scale: 1.1, rotate: 5 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => navigate("/chat")}
@@ -702,7 +959,7 @@ export const ChatBot = ({ forceFullPage = false }) => {
       >
         <MessageSquare className="w-6 h-6 text-white chatbot-float-icon" />
         <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 transition-opacity chatbot-float-glow" />
-      </motion.button>
+      </Motion.button>
     </div>,
     document.body,
   );

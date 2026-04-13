@@ -1,12 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { Sun, Moon, Menu, X, Globe, Search, User } from "lucide-react";
+import {
+  Sun,
+  Moon,
+  Menu,
+  X,
+  Globe,
+  Search,
+  User,
+  Home,
+  Map,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import "./Navbar.css";
 
 const Motion = motion;
 
-const Navbar = ({ onSearch }) => {
+const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [theme, setTheme] = useState(() => {
@@ -25,17 +35,15 @@ const Navbar = ({ onSearch }) => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  useEffect(() => {
-    if (location.pathname !== "/countries") {
-      return;
-    }
-
-    const params = new URLSearchParams(location.search);
-    setSearchTerm(params.get("q") || "");
-  }, [location.pathname, location.search]);
+  const countriesQuery =
+    location.pathname === "/countries"
+      ? new URLSearchParams(location.search).get("q") || ""
+      : "";
+  const effectiveSearchTerm =
+    location.pathname === "/countries" ? countriesQuery : searchTerm;
 
   const syncCountriesQuery = (value) => {
-    const params = new URLSearchParams(location.search);
+    const params = new URLSearchParams();
     if (value.trim()) {
       params.set("q", value.trim());
     } else {
@@ -84,24 +92,22 @@ const Navbar = ({ onSearch }) => {
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
-    if (location.pathname === "/countries") {
-      syncCountriesQuery(value);
-    } else if (onSearch) {
-      onSearch(value);
-    }
+    syncCountriesQuery(value);
   };
 
   // Handle search submit
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (location.pathname === "/countries") {
-      syncCountriesQuery(searchTerm);
-    } else if (onSearch) {
-      onSearch(searchTerm);
-    }
+    syncCountriesQuery(effectiveSearchTerm);
   };
 
   const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
+
+  const navItems = [
+    { to: "/home", label: "Home", icon: Home },
+    { to: "/countries", label: "Countries", icon: Map },
+    { to: "/profile", label: "Profile", icon: User },
+  ];
 
   return (
     <>
@@ -113,14 +119,18 @@ const Navbar = ({ onSearch }) => {
       >
         <div className="navbar-container">
           {/* Left Side - Logo */}
-          <Motion.div
+          <Motion.button
             className="navbar-brand"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            type="button"
+            onClick={() => navigate("/home")}
           >
-            <Globe className="brand-icon" size={28} />
+            <span className="brand-mark">
+              <Globe className="brand-icon" size={26} />
+            </span>
             <h1 className="gradient-text">Explore the World</h1>
-          </Motion.div>
+          </Motion.button>
 
           {/* Middle - Search Bar (Desktop) */}
           <form
@@ -131,22 +141,18 @@ const Navbar = ({ onSearch }) => {
             <input
               type="text"
               placeholder="Search countries by name..."
-              value={searchTerm}
+              value={effectiveSearchTerm}
               onChange={handleSearchChange}
               onFocus={() => setIsSearchFocused(true)}
               onBlur={() => setIsSearchFocused(false)}
               className={`search-input ${isSearchFocused ? "search-focused" : ""}`}
             />
-            {searchTerm && (
+            {effectiveSearchTerm && (
               <button
                 type="button"
                 onClick={() => {
                   setSearchTerm("");
-                  if (location.pathname === "/countries") {
-                    syncCountriesQuery("");
-                  } else if (onSearch) {
-                    onSearch("");
-                  }
+                  syncCountriesQuery("");
                 }}
                 className="clear-search"
               >
@@ -175,11 +181,12 @@ const Navbar = ({ onSearch }) => {
             <Motion.button
               className="profile-btn"
               type="button"
+              onClick={() => navigate("/profile")}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               <User size={16} />
-              <span>View Profile</span>
+              <span>Profile</span>
             </Motion.button>
           </div>
 
@@ -208,6 +215,30 @@ const Navbar = ({ onSearch }) => {
             className="mobile-menu glass"
           >
             <div className="mobile-nav-links">
+              <div className="mobile-brand-row">
+                <Globe className="brand-icon" size={22} />
+                <strong>Explore the World</strong>
+              </div>
+
+              <div className="mobile-nav-pill-grid">
+                {navItems.map((item) => {
+                  const NavIcon = item.icon;
+                  return (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      className={({ isActive }) =>
+                        `mobile-nav-link ${isActive ? "active" : ""}`
+                      }
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <NavIcon size={16} />
+                      <span>{item.label}</span>
+                    </NavLink>
+                  );
+                })}
+              </div>
+
               <form
                 onSubmit={handleSearchSubmit}
                 className="mobile-search-wrap"
@@ -216,20 +247,16 @@ const Navbar = ({ onSearch }) => {
                 <input
                   type="text"
                   placeholder="Search countries..."
-                  value={searchTerm}
+                  value={effectiveSearchTerm}
                   onChange={handleSearchChange}
                   className="search-input"
                 />
-                {searchTerm && (
+                {effectiveSearchTerm && (
                   <button
                     type="button"
                     onClick={() => {
                       setSearchTerm("");
-                      if (location.pathname === "/countries") {
-                        syncCountriesQuery("");
-                      } else if (onSearch) {
-                        onSearch("");
-                      }
+                      syncCountriesQuery("");
                     }}
                     className="clear-search"
                   >
@@ -260,10 +287,14 @@ const Navbar = ({ onSearch }) => {
               <Motion.button
                 className="profile-btn mobile-profile"
                 type="button"
+                onClick={() => {
+                  navigate("/profile");
+                  setMobileMenuOpen(false);
+                }}
                 whileTap={{ scale: 0.95 }}
               >
                 <User size={16} />
-                <span>View Profile</span>
+                <span>Profile</span>
               </Motion.button>
             </div>
           </Motion.div>

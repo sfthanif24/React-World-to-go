@@ -12,3 +12,39 @@
   background-clip: text;
   color: transparent;
 }
+
+.click-wave {
+  position: fixed;
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
+  margin-top: -8px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--primary) 72%, white 28%);
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.9;
+  box-shadow:
+    0 0 0 0 rgba(66, 217, 255, 0.45),
+    0 0 0 0 rgba(47, 99, 255, 0.35);
+  animation: clickWaveExpand 0.7s ease-out forwards;
+}
+
+@keyframes clickWaveExpand {
+  0% {
+    transform: scale(0.25);
+    opacity: 0.95;
+  }
+
+  70% {
+    opacity: 0.45;
+  }
+
+  100% {
+    transform: scale(5.6);
+    opacity: 0;
+    box-shadow:
+      0 0 0 22px rgba(66, 217, 255, 0),
+      0 0 0 40px rgba(47, 99, 255, 0);
+  }
+}

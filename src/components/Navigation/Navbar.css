@@ -5,10 +5,16 @@
   left: 0;
   width: 100%;
   z-index: 1000;
-  padding: 0.9rem 1.4rem;
+  padding: 0.85rem 1.2rem;
   display: flex;
   justify-content: center;
-  background: rgba(2, 5, 11, 0.85);
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(66, 217, 255, 0.12),
+      transparent 28%
+    ),
+    rgba(2, 5, 11, 0.82);
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(12px);
   transition: all 0.3s ease;
@@ -16,7 +22,13 @@
 
 .navbar-scrolled {
   padding: 0.6rem 1.4rem;
-  background: rgba(2, 5, 11, 0.95);
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(66, 217, 255, 0.14),
+      transparent 28%
+    ),
+    rgba(2, 5, 11, 0.94);
   backdrop-filter: blur(16px);
 }
 
@@ -43,14 +55,34 @@
   align-items: center;
   gap: 0.65rem;
   cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 0;
+  text-align: left;
 }
 
 .navbar-brand h1 {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: 1.1rem;
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;
+}
+
+.brand-mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    135deg,
+    rgba(47, 99, 255, 0.18),
+    rgba(66, 217, 255, 0.14)
+  );
+  border: 1px solid color-mix(in srgb, var(--primary) 28%, var(--border) 72%);
+  box-shadow: 0 12px 22px rgba(47, 99, 255, 0.15);
 }
 
 .gradient-text {
@@ -83,7 +115,7 @@
   max-width: 520px;
   min-width: 220px;
   width: 100%;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 0.5rem 0.9rem;
@@ -299,7 +331,13 @@
   z-index: 999;
   padding: 1.2rem 1.5rem;
   border-top: 1px solid var(--border);
-  background: rgba(2, 5, 11, 0.96);
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(66, 217, 255, 0.1),
+      transparent 30%
+    ),
+    rgba(2, 5, 11, 0.96);
   backdrop-filter: blur(16px);
 }
 
@@ -313,18 +351,76 @@
   gap: 1rem;
 }
 
+.mobile-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.2rem 0;
+}
+
+.mobile-brand-row strong {
+  display: inline-block;
+  color: var(--foreground);
+}
+
+.mobile-nav-pill-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.mobile-nav-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.8rem 0.65rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.mobile-nav-link.active {
+  color: #fff;
+  background: linear-gradient(135deg, #2f63ff, #42d9ff);
+  border-color: transparent;
+}
+
+.mobile-search-note {
+  padding: 0.8rem 1rem;
+  border: 1px dashed var(--border);
+  border-radius: 0.85rem;
+  color: var(--muted-foreground);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
 .mobile-search-wrap {
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.06);
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.45rem 0.7rem;
   border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 0.6rem 0.9rem;
-  gap: 0.6rem;
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="light"] .mobile-search-wrap {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.mobile-search-wrap .search-icon {
+  flex-shrink: 0;
 }
 
 .mobile-search-wrap .search-input {
   flex: 1;
+  min-width: 0;
 }
 
 .mobile-theme-btn {
@@ -353,10 +449,6 @@
 
 /* Responsive Design */
 @media (max-width: 968px) {
-  .navbar-brand h1 {
-    font-size: 1.1rem;
-  }
-
   .navbar-search {
     max-width: 360px;
     min-width: 160px;
@@ -389,6 +481,10 @@
     gap: 0.6rem;
   }
 
+  .brand-copy small {
+    display: none;
+  }
+
   .navbar-brand h1 {
     font-size: 0.95rem;
   }
@@ -404,12 +500,36 @@
 
 @media (max-width: 480px) {
   .navbar-brand h1 {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
+  }
+
+  .navbar-links {
+    display: none;
   }
 
   .brand-icon {
     width: 22px;
     height: 22px;
+  }
+
+  .mobile-nav-pill-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mobile-profile {
+    display: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .navbar-brand h1 {
+    display: none;
+  }
+
+  .brand-mark {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
   }
 }
 

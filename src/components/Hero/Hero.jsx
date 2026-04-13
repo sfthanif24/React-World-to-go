@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Compass, MapPin, ArrowRight } from "lucide-react";
+import { Compass, User, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import "./HomePage.css";
 
@@ -58,9 +58,12 @@ const HomePage = ({ onExploreClick }) => {
               <span>Start Exploring</span>
               <ArrowRight size={16} className="btn-arrow" />
             </button>
-            <button className="hero-btn-secondary">
-              <MapPin size={18} />
-              <span>Track Visited</span>
+            <button
+              className="hero-btn-secondary"
+              onClick={() => navigate("/profile")}
+            >
+              <User size={18} />
+              <span>Profile</span>
             </button>
           </Motion.div>
 

@@ -28,3 +28,10 @@
     gap: 1rem;
   }
 }
+
+@media (max-width: 520px) {
+  .countries-grid {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+}

@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import Countries from "../components/Countries/Countries";
+import { getPlannedIds, togglePlanned } from "../utils/travelStorage";
 import "./CountriesPage.css";
 
 const CountriesPage = () => {
@@ -23,6 +24,35 @@ const CountriesPage = () => {
   const [countries, setCountries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCountry, setSelectedCountry] = useState(null);
+  const [plannedIds, setPlannedIds] = useState([]);
+
+  const readText = (value, fallback = "") => {
+    if (value == null) return fallback;
+    if (typeof value === "string" || typeof value === "number") {
+      const text = String(value).trim();
+      return text || fallback;
+    }
+    if (typeof value === "object") {
+      if (typeof value.common === "string") return value.common;
+      if (typeof value.official === "string") return value.official;
+      if (typeof value.name === "string") return value.name;
+    }
+    return fallback;
+  };
+
+  const getCountryName = (country) =>
+    readText(country?.name?.common || country?.name, "Unknown Country");
+
+  const getCountryId = (country, index = 0) => {
+    const cca3 = readText(country?.cca3);
+    const cca2 = readText(country?.cca2);
+    const commonName = getCountryName(country);
+    return cca3 || cca2 || `${commonName}-${index}`;
+  };
+
+  useEffect(() => {
+    setPlannedIds(getPlannedIds());
+  }, []);
 
   useEffect(() => {
     fetch("https://openapi.programming-hero.com/api/all")
@@ -230,6 +260,13 @@ const CountriesPage = () => {
     return <Info size={16} />;
   };
 
+  const handleTogglePlan = (country) => {
+    const countryId = country?.cca3 || country?.name?.common;
+    if (!countryId) return;
+    togglePlanned(countryId);
+    setPlannedIds(getPlannedIds());
+  };
+
   useEffect(() => {
     if (!selectedCountry) return undefined;
 
@@ -246,15 +283,15 @@ const CountriesPage = () => {
   const searchQuery = (searchParams.get("q") || "").trim().toLowerCase();
 
   const sidebarCountries = [...countries].sort((a, b) => {
-    const nameA = a.name?.common || "";
-    const nameB = b.name?.common || "";
+    const nameA = getCountryName(a);
+    const nameB = getCountryName(b);
     return nameA.localeCompare(nameB);
   });
 
   const filteredCountries = searchQuery
     ? countries.filter((country) => {
-        const commonName = country.name?.common?.toLowerCase() || "";
-        const officialName = country.name?.official?.toLowerCase() || "";
+        const commonName = readText(country?.name?.common).toLowerCase();
+        const officialName = readText(country?.name?.official).toLowerCase();
         return (
           commonName.includes(searchQuery) || officialName.includes(searchQuery)
         );
@@ -262,8 +299,8 @@ const CountriesPage = () => {
     : countries;
 
   const matchedCountries = [...filteredCountries].sort((a, b) => {
-    const nameA = a.name?.common || "";
-    const nameB = b.name?.common || "";
+    const nameA = getCountryName(a);
+    const nameB = getCountryName(b);
     return nameA.localeCompare(nameB);
   });
 
@@ -278,18 +315,18 @@ const CountriesPage = () => {
         <div className="countries-layout">
           <aside className="countries-sidebar">
             <ul>
-              {sidebarCountries.map((country) => (
-                <li key={`list-${country.cca3 || country.name?.common}`}>
+              {sidebarCountries.map((country, index) => (
+                <li key={`list-${getCountryId(country, index)}-${index}`}>
                   <div className="country-list-item">
                     <img
                       src={country.flags?.flags?.png}
                       alt={
                         country.flags?.flags?.alt ||
-                        `${country.name?.common} flag`
+                        `${getCountryName(country)} flag`
                       }
                       loading="lazy"
                     />
-                    <span>{country.name?.common}</span>
+                    <span>{getCountryName(country)}</span>
                   </div>
                 </li>
               ))}
@@ -359,6 +396,11 @@ const CountriesPage = () => {
             {(() => {
               const details = getCountryDetails(selectedCountry);
               const allDetailRows = getAllDetailRows(selectedCountry);
+              const countryId =
+                selectedCountry?.cca3 || selectedCountry?.name?.common || "";
+              const planned = countryId
+                ? plannedIds.includes(countryId)
+                : false;
               return (
                 <>
                   <div className="country-modal-content">
@@ -415,6 +457,14 @@ const CountriesPage = () => {
                           Open in Maps
                         </a>
                       )}
+
+                      <button
+                        type="button"
+                        className={`country-plan-link ${planned ? "is-planned" : ""}`}
+                        onClick={() => handleTogglePlan(selectedCountry)}
+                      >
+                        {planned ? "Remove from Next Plan" : "Add to Next Plan"}
+                      </button>
                     </div>
                   </div>
                 </>
