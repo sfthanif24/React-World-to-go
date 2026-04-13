@@ -2,18 +2,18 @@ import React from "react";
 import Country from "../Country/Country";
 import "./Countries.css";
 
-const Countries = ({ countries, handleVisitedCountries, handleVisitedFlags }) => {
+const Countries = ({ countries, onOpenDetails }) => {
   if (!countries) return null;
-  
+
   return (
     <div className="countries-section">
       <div className="countries-grid">
-        {countries.map((country) => (
+        {countries.map((country, index) => (
           <Country
             key={country.cca3 || country.name.common}
             country={country}
-            handleVisitedCountries={handleVisitedCountries}
-            handleVisitedFlags={handleVisitedFlags}
+            onOpenDetails={onOpenDetails}
+            style={{ "--card-index": index }}
           />
         ))}
       </div>
@@ -22,4 +22,3 @@ const Countries = ({ countries, handleVisitedCountries, handleVisitedFlags }) =>
 };
 
 export default Countries;
-

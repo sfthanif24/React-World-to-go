@@ -1,39 +1,57 @@
 import React, { useState } from "react";
+import { Map, Users } from "lucide-react";
 import "./Country.css";
 
-const Country = ({ country, handleVisitedCountries, handleVisitedFlags }) => {
+const Country = ({ country, onOpenDetails, style }) => {
   const [visited, setVisited] = useState(false);
-  const handleVisit = () => {
-    //Basic System
-    // if (visited) {
-    //   setVisited(false);
-    // } else {
-    //   setVisited(true);
-    // }
+  const populationValue = country.population?.population || country.population;
+  const areaValue = country.area?.area || country.area;
 
-    //Second System
-    // setVisited(visited ? false : true);
+  const formatNumber = (value) =>
+    typeof value === "number" ? value.toLocaleString() : "N/A";
 
-    //Third System
-    setVisited(!visited);
-    handleVisitedCountries(country);
-  };
   return (
-    <div className="country">
+    <article
+      className="country"
+      style={style}
+      onClick={() => onOpenDetails?.(country)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onOpenDetails?.(country);
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={`View details for ${country.name.common}`}
+    >
       <img src={country.flags.flags.png} alt={country.flags.flags.alt} />
-      <h3>Name: {country.name.common}</h3>
-      <p>Population: {country.population.population}</p>
-      <p>Area: {country.area.area} km²</p>
+      <h3 className="country-name">{country.name.common}</h3>
+      <p className="country-meta">
+        <span className="country-meta-label">
+          <Users size={14} />
+          Population
+        </span>
+        <strong>{formatNumber(populationValue)}</strong>
+      </p>
+      <p className="country-meta">
+        <span className="country-meta-label">
+          <Map size={14} />
+          Area
+        </span>
+        <strong>{formatNumber(areaValue)} km²</strong>
+      </p>
       <button
-        className={visited ? "country-visited" : ""}
-        onClick={handleVisit}
+        type="button"
+        className={`country-visit-btn ${visited ? "is-visited" : ""}`}
+        onClick={(event) => {
+          event.stopPropagation();
+          setVisited((prev) => !prev);
+        }}
       >
-        {visited ? "Visited" : "Not visited"}
+        {visited ? "Visited" : "Not Visited"}
       </button>
-      <button onClick={() => handleVisitedFlags(country.flags.flags.png)}>
-        Add Visited Flag
-      </button>
-    </div>
+    </article>
   );
 };
 

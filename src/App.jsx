@@ -4,6 +4,7 @@ import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "./context/ThemeContext";
 import Layout from "./components/Layout/Layout";
 import HomePage from "./pages/HomePage";
+import { ChatBot } from "./components/ChatBot/ChatBot";
 
 import "./App.css";
 
@@ -30,8 +31,13 @@ const App = () => {
               <Route index element={<HomePage />} />
               <Route path="countries" element={<CountriesPage />} />
             </Route>
+            <Route path="/chat" element={<Layout />}>
+              <Route index element={<ChatBot forceFullPage={true} />} />
+            </Route>
           </Routes>
         </Suspense>
+        {/* Global ChatBot FloatingButton - visible on all pages */}
+        <ChatBot />
       </BrowserRouter>
     </ThemeProvider>
   );

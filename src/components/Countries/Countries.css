@@ -5,10 +5,26 @@
   padding: 1rem 0;
 }
 
+.countries-grid .country {
+  opacity: 0;
+  animation: card-fade-up 0.55s ease forwards;
+  animation-delay: calc(var(--card-index, 0) * 35ms);
+}
+
+@keyframes card-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @media (max-width: 768px) {
   .countries-grid {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 1rem;
   }
 }
-

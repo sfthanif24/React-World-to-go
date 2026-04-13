@@ -3,17 +3,54 @@
   margin: 0;
   padding: 1rem;
   border-radius: 1rem;
-  background: var(--card);
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--card) 92%, white 8%),
+    var(--card)
+  );
   color: var(--card-foreground);
-  box-shadow: 0 10px 22px rgba(8, 18, 38, 0.22);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 12px 28px rgba(8, 18, 38, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+    transform 0.28s ease,
+    box-shadow 0.28s ease,
+    border-color 0.28s ease;
+}
+
+.country::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(66, 217, 255, 0.25),
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at bottom left,
+      rgba(47, 99, 255, 0.18),
+      transparent 50%
+    );
+  opacity: 0;
+  transition: opacity 0.28s ease;
+  pointer-events: none;
 }
 
 .country:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 16px 30px rgba(35, 95, 255, 0.25);
+  transform: translateY(-7px) scale(1.01);
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border) 55%);
+  box-shadow:
+    0 20px 38px rgba(35, 95, 255, 0.26),
+    0 0 0 1px rgba(66, 217, 255, 0.24);
+}
+
+.country:hover::before {
+  opacity: 1;
 }
 
 .country img {
@@ -22,10 +59,16 @@
   object-fit: cover;
   border-radius: 0.7rem;
   border: 1px solid var(--border);
+  transition: transform 0.35s ease;
+}
+
+.country:hover img {
+  transform: scale(1.03);
 }
 
 .country h3 {
   margin: 0.8rem 0 0.5rem;
+  font-size: 1.07rem;
 }
 
 .country p {
@@ -33,22 +76,83 @@
   color: var(--muted-foreground);
 }
 
-.country button {
-  margin-top: 0.8rem;
-  margin-right: 0.6rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 0.45rem 0.85rem;
+.country-name {
+  margin: 0.95rem 0 0.65rem;
+  font-size: 1.42rem;
+  font-weight: 800;
+  line-height: 1.2;
   color: var(--foreground);
-  background: var(--muted);
+  letter-spacing: 0.01em;
 }
 
-.country button:hover {
+.country-meta {
+  margin: 0.55rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--border);
+  border-radius: 0.68rem;
+  background: color-mix(in srgb, var(--muted) 86%, var(--card) 14%);
+  padding: 0.58rem 0.75rem;
+}
+
+.country-meta span {
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, var(--primary) 72%, var(--foreground) 28%);
+}
+
+.country-meta-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+}
+
+.country-meta-label svg {
+  color: color-mix(in srgb, var(--primary) 84%, var(--foreground) 16%);
+}
+
+.country-meta strong {
+  font-size: 1.06rem;
+  font-weight: 800;
+  color: var(--foreground);
+}
+
+.country-visit-btn {
+  width: 100%;
+  margin-top: 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 32%, var(--border) 68%);
+  border-radius: 0.82rem;
+  padding: 0.66rem 0.85rem;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--muted) 78%, var(--card) 22%),
+    color-mix(in srgb, var(--muted) 90%, var(--card) 10%)
+  );
+  color: var(--foreground);
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.country-visit-btn:hover {
+  transform: translateY(-2px);
   border-color: var(--primary);
+  box-shadow: 0 10px 20px rgba(35, 95, 255, 0.25);
+  filter: brightness(1.02);
 }
 
-.country-visited {
-  color: #fff;
+.country-visit-btn.is-visited {
   border-color: transparent;
   background: var(--gradient-primary);
+  color: #ffffff;
+  box-shadow: 0 12px 24px rgba(35, 95, 255, 0.34);
 }
