@@ -317,7 +317,18 @@ const CountriesPage = () => {
             <ul>
               {sidebarCountries.map((country, index) => (
                 <li key={`list-${getCountryId(country, index)}-${index}`}>
-                  <div className="country-list-item">
+                  <button
+                    type="button"
+                    className={`country-list-item ${
+                      selectedCountry &&
+                      getCountryId(selectedCountry) ===
+                        getCountryId(country, index)
+                        ? "is-active"
+                        : ""
+                    }`}
+                    onClick={() => setSelectedCountry(country)}
+                    aria-label={`Show details for ${getCountryName(country)}`}
+                  >
                     <img
                       src={country.flags?.flags?.png}
                       alt={
@@ -327,7 +338,7 @@ const CountriesPage = () => {
                       loading="lazy"
                     />
                     <span>{getCountryName(country)}</span>
-                  </div>
+                  </button>
                 </li>
               ))}
             </ul>

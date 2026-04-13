@@ -60,14 +60,19 @@
 }
 
 .country-list-item {
+  width: 100%;
+  appearance: none;
+  border: 1px solid var(--border);
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 0.65rem;
-  border: 1px solid var(--border);
   border-radius: 0.7rem;
   padding: 0.45rem 0.55rem;
   color: var(--foreground);
   font-size: 0.92rem;
+  font-family: inherit;
+  text-align: left;
   background: rgba(255, 255, 255, 0.02);
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
   transition:
@@ -80,6 +85,17 @@
   transform: translateY(-2px);
   border-color: var(--primary);
   box-shadow: 0 10px 22px rgba(47, 99, 255, 0.2);
+}
+
+.country-list-item.is-active {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--muted) 72%, var(--primary) 28%);
+  box-shadow: 0 10px 22px rgba(47, 99, 255, 0.24);
+}
+
+.country-list-item:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 55%, white 45%);
+  outline-offset: 2px;
 }
 
 .country-list-item img {
