@@ -1,16 +1,64 @@
-# React + Vite
+# Explore the World
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React application built with Vite for exploring different countries, viewing their details, and planning or tracking visits.
 
-Currently, two official plugins are available:
+## About the Project
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+"Explore the World" is a comprehensive learning and tracking platform for global geography. It fetches dynamic country data (like flags, population, and currencies) to render interactive geography cards. Users can seamlessly search for specific nations, filter details, and interactively build a personalized travel portfolio.
+The application logic features:
 
-## React Compiler
+- **Travel Tracking**: Using local storage (`travelStorage.js`), the application persists your "Visited" and "Planned" countries across sessions, displaying them effectively on a dedicated Profile tab.
+- **Theme Management**: Employs React Context (`ThemeContext.jsx`) to provide a global dark/light mode toggle that updates UI elements consistently.
+- **Interactive UI**: Contains a tailored user interface featuring specialized components like Navigation, Hero section, and dynamically generated layout lists.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Features
 
-## Expanding the ESLint configuration
+- Browse and search for countries around the world
+- View detailed country information (flags, capitals, population, currencies, etc.)
+- Mark countries as visited or add them to your planned trips
+- Track your travel progress on the Profile page
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Tech Stack
+
+- Frontend: React (with Vite)
+- Styling: Custom CSS
+- Routing: React Router
+- Data: LocalStorage for persisting travel plans and visits
+
+## Running the Application
+
+To run the application locally:
+
+```bash
+npm install
+npm run dev
+```
+
+## Project Structure
+
+```text
+Explore the World/
+├── public/                # Static assets
+│   └── world.avif
+├── src/                   # Source files
+│   ├── components/        # Reusable UI components
+│   │   ├── ChatBot/
+│   │   ├── Countries/
+│   │   ├── Country/
+│   │   ├── Footer/
+│   │   ├── Hero/
+│   │   ├── Layout/
+│   │   └── Navigation/
+│   ├── context/           # React context provider (ThemeContext)
+│   ├── pages/             # Route mapping pages
+│   │   ├── CountriesPage.jsx
+│   │   ├── HomePage.jsx
+│   │   └── ProfilePage.jsx
+│   ├── utils/             # Helper utilities (travelStorage.js)
+│   ├── App.jsx            # Main app router
+│   ├── main.jsx           # App entry point
+│   └── index.css          # Global styling
+├── eslint.config.js
+├── package.json
+└── vite.config.js
+```

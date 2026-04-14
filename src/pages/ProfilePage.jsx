@@ -272,7 +272,9 @@ const ProfilePage = () => {
           {visitedCountries.length ? (
             <ul>
               {visitedCountries.map((country) => {
-                const countryId = country?.cca3 || country?.name?.common || "";
+                const countryId = String(
+                  country?.cca3 || country?.cca2 || country?.name?.common || "",
+                ).toUpperCase();
                 return (
                   <li key={country.cca3 || country.name?.common}>
                     {country.flags?.flags?.png ? (
@@ -314,7 +316,9 @@ const ProfilePage = () => {
           {plannedCountries.length ? (
             <ul>
               {plannedCountries.map((country) => {
-                const countryId = country?.cca3 || country?.name?.common || "";
+                const countryId = String(
+                  country?.cca3 || country?.cca2 || country?.name?.common || "",
+                ).toUpperCase();
                 return (
                   <li key={country.cca3 || country.name?.common}>
                     {country.flags?.flags?.png ? (

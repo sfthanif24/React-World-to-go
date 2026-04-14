@@ -261,9 +261,9 @@ const CountriesPage = () => {
   };
 
   const handleTogglePlan = (country) => {
-    const countryId = country?.cca3 || country?.name?.common;
+    const countryId = country?.cca3 || country?.cca2 || country?.name?.common;
     if (!countryId) return;
-    togglePlanned(countryId);
+    togglePlanned(countryId.toUpperCase());
     setPlannedIds(getPlannedIds());
   };
 
@@ -407,8 +407,12 @@ const CountriesPage = () => {
             {(() => {
               const details = getCountryDetails(selectedCountry);
               const allDetailRows = getAllDetailRows(selectedCountry);
-              const countryId =
-                selectedCountry?.cca3 || selectedCountry?.name?.common || "";
+              const countryId = (
+                selectedCountry?.cca3 ||
+                selectedCountry?.cca2 ||
+                selectedCountry?.name?.common ||
+                ""
+              ).toUpperCase();
               const planned = countryId
                 ? plannedIds.includes(countryId)
                 : false;
