@@ -271,12 +271,14 @@ const ProfilePage = () => {
           </h3>
           {visitedCountries.length ? (
             <ul>
-              {visitedCountries.map((country) => {
+              {visitedCountries.map((country, index) => {
                 const countryId = String(
                   country?.cca3 || country?.cca2 || country?.name?.common || "",
                 ).toUpperCase();
                 return (
-                  <li key={country.cca3 || country.name?.common}>
+                  <li
+                    key={String(country.cca3 || country.name?.common || index)}
+                  >
                     {country.flags?.flags?.png ? (
                       <img
                         src={country.flags?.flags?.png}

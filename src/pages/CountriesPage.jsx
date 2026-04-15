@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   Clock3,
@@ -24,13 +24,18 @@ const CountriesPage = () => {
   const [countries, setCountries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCountry, setSelectedCountry] = useState(null);
+  const [fullCountryData, setFullCountryData] = useState(null);
+  const [modalLoading, setModalLoading] = useState(false);
   const [plannedIds, setPlannedIds] = useState([]);
 
   const readText = (value, fallback = "") => {
     if (value == null) return fallback;
-    if (typeof value === "string" || typeof value === "number") {
-      const text = String(value).trim();
+    if (typeof value === "string") {
+      const text = value.trim();
       return text || fallback;
+    }
+    if (typeof value === "number") {
+      return String(value);
     }
     if (typeof value === "object") {
       if (typeof value.common === "string") return value.common;
@@ -44,10 +49,22 @@ const CountriesPage = () => {
     readText(country?.name?.common || country?.name, "Unknown Country");
 
   const getCountryId = (country, index = 0) => {
-    const cca3 = readText(country?.cca3);
-    const cca2 = readText(country?.cca2);
+    if (!country) return `unknown-${index}`;
+    const cca3 = readText(country.cca3);
+    const cca2 = readText(country.cca2);
     const commonName = getCountryName(country);
-    return cca3 || cca2 || `${commonName}-${index}`;
+
+    // Explicitly check for valid string values to avoid [object Object]
+    const id =
+      cca3 && typeof cca3 === "string"
+        ? cca3
+        : cca2 && typeof cca2 === "string"
+          ? cca2
+          : commonName && typeof commonName === "string"
+            ? commonName
+            : `country-${index}`;
+
+    return id;
   };
 
   useEffect(() => {
@@ -268,6 +285,38 @@ const CountriesPage = () => {
   };
 
   useEffect(() => {
+    if (!selectedCountry) {
+      setFullCountryData(null);
+      return;
+    }
+
+    const countryId = String(
+      selectedCountry?.cca3 || selectedCountry?.cca2 || "",
+    ).toLowerCase();
+
+    if (!countryId) {
+      setFullCountryData(selectedCountry);
+      return;
+    }
+
+    setModalLoading(true);
+    fetch(`https://restcountries.com/v3.1/alpha/${countryId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setFullCountryData(data[0]);
+        } else {
+          setFullCountryData(selectedCountry);
+        }
+        setModalLoading(false);
+      })
+      .catch(() => {
+        setFullCountryData(selectedCountry);
+        setModalLoading(false);
+      });
+  }, [selectedCountry]);
+
+  useEffect(() => {
     if (!selectedCountry) return undefined;
 
     const handleEscape = (event) => {
@@ -287,6 +336,13 @@ const CountriesPage = () => {
     const nameB = getCountryName(b);
     return nameA.localeCompare(nameB);
   });
+
+  const getSidebarCountryId = (country, index = 0) => {
+    const cca3 = readText(country?.cca3);
+    const cca2 = readText(country?.cca2);
+    const commonName = getCountryName(country);
+    return cca3 || cca2 || `${commonName}-${index}`;
+  };
 
   const filteredCountries = searchQuery
     ? countries.filter((country) => {
@@ -316,13 +372,15 @@ const CountriesPage = () => {
           <aside className="countries-sidebar">
             <ul>
               {sidebarCountries.map((country, index) => (
-                <li key={`list-${getCountryId(country, index)}-${index}`}>
+                <li
+                  key={`list-${getSidebarCountryId(country, index)}-${index}`}
+                >
                   <button
                     type="button"
                     className={`country-list-item ${
                       selectedCountry &&
-                      getCountryId(selectedCountry) ===
-                        getCountryId(country, index)
+                      getSidebarCountryId(selectedCountry) ===
+                        getSidebarCountryId(country, index)
                         ? "is-active"
                         : ""
                     }`}
@@ -330,9 +388,10 @@ const CountriesPage = () => {
                     aria-label={`Show details for ${getCountryName(country)}`}
                   >
                     <img
-                      src={country.flags?.flags?.png}
+                      src={country.flags?.flags?.png || country.flags?.png}
                       alt={
                         country.flags?.flags?.alt ||
+                        country.flags?.alt ||
                         `${getCountryName(country)} flag`
                       }
                       loading="lazy"
@@ -404,87 +463,110 @@ const CountriesPage = () => {
               <X size={18} />
             </button>
 
-            {(() => {
-              const details = getCountryDetails(selectedCountry);
-              const allDetailRows = getAllDetailRows(selectedCountry);
-              const countryId = (
-                selectedCountry?.cca3 ||
-                selectedCountry?.cca2 ||
-                selectedCountry?.name?.common ||
-                ""
-              ).toUpperCase();
-              const planned = countryId
-                ? plannedIds.includes(countryId)
-                : false;
-              return (
-                <>
-                  <div className="country-modal-content">
-                    <div className="country-modal-left">
-                      <img src={details.flag} alt={details.flagAlt} />
-                      <div className="country-modal-name-block">
-                        <h2>{details.name}</h2>
-                        <p>{details.officialName}</p>
+            {modalLoading ? (
+              <div
+                className="modal-loading-state"
+                style={{
+                  padding: "40px",
+                  textAlign: "center",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "12px",
+                }}
+              >
+                <LoaderCircle className="loading-spinner" size={32} />
+                <span>Fetching country details...</span>
+              </div>
+            ) : (
+              (() => {
+                const dataToShow = fullCountryData || selectedCountry;
+                const details = getCountryDetails(dataToShow);
+                const allDetailRows = getAllDetailRows(dataToShow);
+                const countryId = String(
+                  dataToShow?.cca3 ||
+                    dataToShow?.cca2 ||
+                    dataToShow?.name?.common ||
+                    "",
+                ).toUpperCase();
+                const planned = countryId
+                  ? plannedIds.includes(countryId)
+                  : false;
+                return (
+                  <>
+                    <div className="country-modal-content">
+                      <div className="country-modal-left">
+                        <img src={details.flag} alt={details.flagAlt} />
+                        <div className="country-modal-name-block">
+                          <h2>{details.name}</h2>
+                          <p>{details.officialName}</p>
+                        </div>
+                        <div className="country-modal-description">
+                          <h3>Description</h3>
+                          <p>{details.description}</p>
+                        </div>
                       </div>
-                      <div className="country-modal-description">
-                        <h3>Description</h3>
-                        <p>{details.description}</p>
-                      </div>
-                    </div>
 
-                    <div className="country-modal-right">
-                      <div className="country-modal-right-head">
-                        <h3>Country Details</h3>
-                      </div>
+                      <div className="country-modal-right">
+                        <div className="country-modal-right-head">
+                          <h3>Country Details</h3>
+                        </div>
 
-                      <div className="country-modal-grid">
-                        {allDetailRows.map((row) => {
-                          const label = formatDetailLabel(row.key);
-                          const lines = getDetailDisplayLines(label, row.value);
+                        <div className="country-modal-grid">
+                          {allDetailRows.map((row) => {
+                            const label = formatDetailLabel(row.key);
+                            const lines = getDetailDisplayLines(
+                              label,
+                              row.value,
+                            );
 
-                          return (
-                            <p key={row.key} className="detail-row">
-                              <span className="detail-icon">
-                                {getDetailIcon(row.key, label)}
-                              </span>
-                              <span className="detail-content">
-                                {lines.firstLine && (
-                                  <span className="detail-first-line">
-                                    {lines.firstLine}
-                                  </span>
-                                )}
-                                <span className="detail-second-line">
-                                  <strong>{lines.secondLineLabel}:</strong>{" "}
-                                  {lines.secondLineValue}
+                            return (
+                              <p key={row.key} className="detail-row">
+                                <span className="detail-icon">
+                                  {getDetailIcon(row.key, label)}
                                 </span>
-                              </span>
-                            </p>
-                          );
-                        })}
-                      </div>
+                                <span className="detail-content">
+                                  {lines.firstLine && (
+                                    <span className="detail-first-line">
+                                      {lines.firstLine}
+                                    </span>
+                                  )}
+                                  <span className="detail-second-line">
+                                    <strong>{lines.secondLineLabel}:</strong>{" "}
+                                    {lines.secondLineValue}
+                                  </span>
+                                </span>
+                              </p>
+                            );
+                          })}
+                        </div>
 
-                      {details.maps && (
-                        <a
-                          className="country-map-link"
-                          href={details.maps}
-                          target="_blank"
-                          rel="noreferrer"
+                        {details.maps && (
+                          <a
+                            className="country-map-link"
+                            href={details.maps}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Open in Maps
+                          </a>
+                        )}
+
+                        <button
+                          type="button"
+                          className={`country-plan-link ${planned ? "is-planned" : ""}`}
+                          onClick={() => handleTogglePlan(dataToShow)}
                         >
-                          Open in Maps
-                        </a>
-                      )}
-
-                      <button
-                        type="button"
-                        className={`country-plan-link ${planned ? "is-planned" : ""}`}
-                        onClick={() => handleTogglePlan(selectedCountry)}
-                      >
-                        {planned ? "Remove from Next Plan" : "Add to Next Plan"}
-                      </button>
+                          {planned
+                            ? "Remove from Next Plan"
+                            : "Add to Next Plan"}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </>
-              );
-            })()}
+                  </>
+                );
+              })()
+            )}
           </div>
         </div>
       )}

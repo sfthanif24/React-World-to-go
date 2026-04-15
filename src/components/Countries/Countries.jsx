@@ -1,32 +1,29 @@
-import React from "react";
+﻿import React from "react";
 import Country from "../Country/Country";
 import "./Countries.css";
 
 const Countries = ({ countries, onOpenDetails }) => {
-  if (!countries) return null;
-
-  const getCountryKey = (country, index) => {
-    const cca3 = typeof country?.cca3 === "string" ? country.cca3.trim() : "";
-    const cca2 = typeof country?.cca2 === "string" ? country.cca2.trim() : "";
-    const commonName =
-      typeof country?.name?.common === "string"
-        ? country.name.common.trim()
-        : "country";
-    return cca3 || cca2 || `${commonName}-${index}`;
-  };
-
   return (
-    <div className="countries-section">
-      <div className="countries-grid">
-        {countries.map((country, index) => (
+    <div className="countries-grid">
+      {countries.map((country, index) => {
+        // Create a unique string identifier to avoid [object Object]
+        const countryId =
+          typeof country?.cca3 === "string"
+            ? country.cca3
+            : typeof country?.cca2 === "string"
+              ? country.cca2
+              : typeof country?.name?.common === "string"
+                ? country.name.common
+                : `country-key-${index}`;
+        return (
           <Country
-            key={`${getCountryKey(country, index)}-${index}`}
+            key={countryId}
             country={country}
             onOpenDetails={onOpenDetails}
-            style={{ "--card-index": index }}
+            index={index}
           />
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 };
